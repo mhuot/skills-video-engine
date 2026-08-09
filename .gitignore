@@ -5,3 +5,4 @@ renders/
 !docs/assets/showcase/*.mp4
 *.mov
 *.wav
+graphify-out/
