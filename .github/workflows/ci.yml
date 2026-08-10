@@ -26,11 +26,18 @@ jobs:
       - uses: actions/checkout@v7
       - name: Run ShellCheck
         run: shellcheck scripts/*.sh
+      - name: Validate Compose helper
+        run: docker compose config --quiet
       - name: Test dependency manifest
         run: python -m unittest discover -s scripts -p "test_*.py"
       - name: Build image
         run: docker build --platform "${{ matrix.platform }}" -t "skills-video-engine:test-${{ matrix.arch }}" .
       - name: Run smoke test
         run: bash scripts/smoke_test.sh "skills-video-engine:test-${{ matrix.arch }}"
+      - name: Run command through Compose helper
+        env:
+          SKILLS_VIDEO_ENGINE_IMAGE: skills-video-engine:test-${{ matrix.arch }}
+          VIDEO_PROJECT_DIR: ${{ github.workspace }}/tests/fixtures/minimal-project
+        run: bash scripts/engine.sh hyperframes --version
       - name: Run mounted-project end-to-end test
         run: bash scripts/e2e_test.sh "skills-video-engine:test-${{ matrix.arch }}"

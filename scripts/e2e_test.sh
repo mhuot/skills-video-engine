@@ -20,11 +20,6 @@ mkdir -p \
   "${project_dir}/production/renders" \
   "${project_dir}/production/snapshots"
 
-curl --fail --location --retry 3 --max-time 60 \
-  https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js \
-  --output "${project_dir}/video/assets/gsap.min.js"
-test -s "${project_dir}/video/assets/gsap.min.js"
-
 cat >"${project_dir}/narration.json" <<'JSON'
 {
   "schema_version": 1,
@@ -51,6 +46,9 @@ run_in() {
     "${image}" \
     "$@"
 }
+
+run_in /project copy-gsap video/assets/gsap.min.js
+test -s "${project_dir}/video/assets/gsap.min.js"
 
 run_in /project sh -c \
   "test \"\$(id -u)\" = \"${test_uid}\" &&

@@ -50,6 +50,22 @@
       }
     },
     {
+      "id": "gsap",
+      "name": "GSAP",
+      "pins": [
+        {
+          "file": "Dockerfile",
+          "pattern": "^ARG GSAP_VERSION=(?P<version>.+)$"
+        }
+      ],
+      "source": {
+        "type": "json",
+        "url": "https://registry.npmjs.org/gsap/latest",
+        "path": ["version"],
+        "release_url": "https://www.npmjs.com/package/gsap"
+      }
+    },
+    {
       "id": "chrome-headless-shell",
       "name": "Chrome for Testing headless shell",
       "pins": [

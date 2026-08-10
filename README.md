@@ -12,6 +12,14 @@ video skills such as promo-video:
 
 After the image is pulled, generation can run without network access. Project
 files remain on the host and are mounted into `/project`.
+The image also includes the pinned GSAP browser runtime, so project
+scaffolding does not need to contact a CDN.
+
+For a guided browser and MCP experience over this Engine, use
+[`skills-video-studio`](https://github.com/mhuot/skills-video-studio). Studio
+runs reviewed production recipes, captures command and job metadata, and can
+incrementally rerender changed composition segments before rebuilding the
+master without re-encoding unchanged video.
 
 ## See the engine in action
 
@@ -40,9 +48,42 @@ Explainer production files and methodology are available in the
 ## Pull
 
 ```bash
-export SKILLS_VIDEO_ENGINE_IMAGE="${SKILLS_VIDEO_ENGINE_IMAGE:-ghcr.io/mhuot/skills-video-engine:0.3.0}"
+export SKILLS_VIDEO_ENGINE_IMAGE="${SKILLS_VIDEO_ENGINE_IMAGE:-ghcr.io/mhuot/skills-video-engine:0.3.1}"
 docker pull "$SKILLS_VIDEO_ENGINE_IMAGE"
 ```
+
+## Quick start with Docker Compose
+
+For users who know basic Docker but do not want to repeat the full `docker
+run` contract, clone this repository once and run the helper from any video
+project:
+
+```bash
+git clone https://github.com/mhuot/skills-video-engine "$HOME/skills-video-engine"
+cd /path/to/video-project
+mkdir -p production/renders production/snapshots
+"$HOME/skills-video-engine/scripts/engine.sh" --workdir video hyperframes lint
+"$HOME/skills-video-engine/scripts/engine.sh" --workdir video hyperframes check
+"$HOME/skills-video-engine/scripts/engine.sh" \
+  --workdir video \
+  hyperframes render --quality high --output ../production/renders/master.mp4
+```
+
+The helper mounts the current directory at `/project`, runs as your host
+UID/GID, disables container networking, enables an init process, and gives
+headless Chromium a 1 GiB shared-memory segment. Set `VIDEO_PROJECT_DIR` to
+run against a different project:
+
+```bash
+VIDEO_PROJECT_DIR=/path/to/video-project \
+  "$HOME/skills-video-engine/scripts/engine.sh" python tools/tts_generate.py
+```
+
+This works with projects created by
+[`explainer-video-skill`](https://github.com/mhuot/explainer-video-skill) and
+with ad hoc projects that provide their own scripts and `video/index.html`.
+Commands are arguments passed directly to the container; the helper does not
+evaluate project-supplied shell strings.
 
 Production uses a released version or immutable digest, never `latest`.
 Developers can override `SKILLS_VIDEO_ENGINE_IMAGE` with a local tag or digest.
@@ -72,6 +113,17 @@ docker run --rm "$SKILLS_VIDEO_ENGINE_IMAGE" chrome-headless-shell --version
 Run every command from the video-project root. The canonical runtime contract
 mounts that root at `/project`, uses an explicit working directory, preserves
 the underlying command's exit status, and disables runtime networking.
+
+Copy the image-bundled GSAP runtime into a new or existing project without
+network access:
+
+```bash
+docker run --rm --network none \
+  --volume "$PWD:/project" \
+  --workdir /project \
+  "$SKILLS_VIDEO_ENGINE_IMAGE" \
+  copy-gsap video/assets/gsap.min.js
+```
 
 Generate narration with a project-owned script:
 
@@ -246,48 +298,25 @@ The `/project` workdir, documented commands on `PATH`, offline Kokoro cache,
 and mounted-project output behavior remain backward compatible within an
 engine minor release. Breaking this contract requires a new minor release.
 
-### Windows / WSL2 (ARM) usage
+### Windows 11 usage
 
-Recommended: run from WSL2 (Ubuntu) for best compatibility with POSIX paths,
-UID mapping, and bash scripts. Keep your explainer-video project inside the
-WSL filesystem (e.g. `~/my-explainer-video`) to avoid Windows/WSL path and
-permission issues.
-
-From WSL2:
-
-```bash
-cd ~/my-explainer-video
-export SKILLS_VIDEO_ENGINE_IMAGE="${SKILLS_VIDEO_ENGINE_IMAGE:-ghcr.io/mhuot/skills-video-engine:0.3.0}"
-docker pull "$SKILLS_VIDEO_ENGINE_IMAGE"
-docker run --rm --init --shm-size=1g --network none \
-  --user "$(id -u):$(id -g)" \
-  --volume "$PWD:/project" --workdir /project \
-  "$SKILLS_VIDEO_ENGINE_IMAGE" python tools/tts_generate.py
-docker run --rm --init --shm-size=1g --network none \
-  --user "$(id -u):$(id -g)" \
-  --volume "$PWD:/project" --workdir /project/video \
-  "$SKILLS_VIDEO_ENGINE_IMAGE" \
-  hyperframes render --output ../production/renders/master.mp4
-```
-
-From PowerShell (less ideal):
+Docker Desktop and PowerShell are sufficient. The explainer-video skill ships
+a native `engine.ps1` launcher, so Windows users do not need WSL or a local
+checkout of this repository.
 
 ```powershell
 cd $env:USERPROFILE\my-explainer-video
-docker pull ghcr.io/mhuot/skills-video-engine:0.3.0
-# Files created by the container may be owned by root; chown from WSL or re-run without --user and fix ownership
-docker run --rm ghcr.io/mhuot/skills-video-engine:0.3.0 hyperframes --version
+docker pull ghcr.io/mhuot/skills-video-engine:0.3.1
+docker run --rm ghcr.io/mhuot/skills-video-engine:0.3.1 hyperframes --version
+& .\tools\engine.ps1 -Workdir video hyperframes check
 ```
 
 Notes / troubleshooting:
 
-- From a `skills-video-engine` checkout, run
-  `bash scripts/smoke_test.sh ghcr.io/mhuot/skills-video-engine:0.3.0`
-  inside WSL to exercise the pulled image.
-- If you see permission issues, run `chown` from WSL or re-run container without
-  `--user` and fix ownership afterwards.
 - Ensure Docker Desktop is configured with enough CPU and RAM for headless
   Chromium and model operations.
+- If an organizational policy blocks public CDNs, use image `0.3.1` or newer;
+  `copy-gsap` obtains the pinned runtime from the image with networking disabled.
 
 ## Build locally
 

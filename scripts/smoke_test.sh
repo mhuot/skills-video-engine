@@ -8,6 +8,8 @@ docker run --rm "${image}" python --version
 docker run --rm "${image}" ffmpeg -hide_banner -version
 docker run --rm "${image}" ffprobe -hide_banner -version
 docker run --rm "${image}" chrome-headless-shell --version
+docker run --rm --network none "${image}" sh -c \
+  'copy-gsap video/assets/gsap.min.js && test -s video/assets/gsap.min.js'
 docker run --rm "${image}" ffmpeg -hide_banner -encoders |
   grep libx264 >/dev/null
 docker run --rm --network none "${image}" python -c \

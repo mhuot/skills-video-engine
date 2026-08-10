@@ -6,3 +6,4 @@ renders/
 *.mov
 *.wav
 graphify-out/
+.env

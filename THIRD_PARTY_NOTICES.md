@@ -6,6 +6,7 @@ licensed components:
 | Component | Version or revision | License |
 | --- | --- | --- |
 | HyperFrames | 0.7.82 | Apache-2.0 |
+| GSAP | 3.15.0 | [GSAP Standard License](https://gsap.com/standard-license/) |
 | Kokoro Python package | 0.9.4 | Apache-2.0 |
 | Kokoro-82M model | `f3ff3571791e39611d31c381e3a41a3af07b4987` | Apache-2.0 |
 | kokoro-onnx Python package | 0.5.0 | MIT |

@@ -6,6 +6,7 @@ FROM node:24-bookworm-slim
 
 ARG TARGETARCH
 ARG HYPERFRAMES_VERSION=0.7.82
+ARG GSAP_VERSION=3.15.0
 ARG CHROME_HEADLESS_SHELL_VERSION=148.0.7778.167
 ARG PUPPETEER_BROWSERS_VERSION=2.13.0
 ARG PLAYWRIGHT_VERSION=1.61.1
@@ -24,6 +25,7 @@ LABEL org.opencontainers.image.source="https://github.com/mhuot/skills-video-eng
 LABEL org.opencontainers.image.documentation="https://github.com/mhuot/skills-video-engine#readme"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL io.github.mhuot.skills-video-engine.hyperframes.version="${HYPERFRAMES_VERSION}"
+LABEL io.github.mhuot.skills-video-engine.gsap.version="${GSAP_VERSION}"
 LABEL io.github.mhuot.skills-video-engine.kokoro.version="${KOKORO_VERSION}"
 LABEL io.github.mhuot.skills-video-engine.kokoro.model-revision="${KOKORO_MODEL_REVISION}"
 LABEL io.github.mhuot.skills-video-engine.browser.amd64.chrome-headless-shell.version="${CHROME_HEADLESS_SHELL_VERSION}"
@@ -99,7 +101,15 @@ RUN if [ "${TARGETARCH}" = "amd64" ]; then \
       \( -name chrome-headless-shell -o -name headless_shell \) -type f 2>/dev/null | head -1)" \
     && test -n "${chrome_path}" \
     && ln -s "${chrome_path}" /usr/local/bin/chrome-headless-shell \
-    && npm install --global "hyperframes@${HYPERFRAMES_VERSION}" --registry="${NPM_REGISTRY}" \
+    && npm install --global \
+      "hyperframes@${HYPERFRAMES_VERSION}" \
+      "gsap@${GSAP_VERSION}" \
+      --registry="${NPM_REGISTRY}" \
+    && mkdir -p /opt/skills-video-engine/vendor \
+    && cp /usr/local/lib/node_modules/gsap/dist/gsap.min.js \
+      /opt/skills-video-engine/vendor/gsap.min.js \
+    && cp /usr/local/lib/node_modules/gsap/package.json \
+      /opt/skills-video-engine/vendor/gsap-package.json \
     && npm cache clean --force
 
 RUN uv python install 3.12 \
@@ -129,8 +139,10 @@ RUN uv python install 3.12 \
     && chmod 1777 /tmp/.cache /tmp/.cache/hyperframes /tmp/.cache/hyperframes/tts
 
 COPY --chmod=0755 tools/tts_batch.py /usr/local/bin/tts-batch
+COPY --chmod=0755 tools/copy_gsap.py /usr/local/bin/copy-gsap
 
 RUN tts-batch --help >/dev/null \
+    && copy-gsap --help >/dev/null \
     && rm -rf /tmp/.cache/uv /tmp/.config /tmp/.local \
     && mkdir -p /tmp/.cache /tmp/.config /tmp/.local \
     && chmod 1777 /tmp/.cache /tmp/.config /tmp/.local

@@ -24,6 +24,7 @@ class DependencyAuditTests(unittest.TestCase):
             "uv": "0.12.1",
             "node": "24",
             "hyperframes": "0.7.82",
+            "gsap": "3.15.0",
             "chrome-headless-shell": "148.0.7778.167",
             "puppeteer-browsers": "2.13.0",
             "playwright": "1.61.1",

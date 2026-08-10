@@ -1,0 +1,13 @@
+services:
+  engine:
+    image: ${SKILLS_VIDEO_ENGINE_IMAGE:-ghcr.io/mhuot/skills-video-engine:0.3.1}
+    pull_policy: missing
+    user: "${ENGINE_UID:-1000}:${ENGINE_GID:-1000}"
+    init: true
+    network_mode: none
+    shm_size: 1gb
+    working_dir: /project
+    volumes:
+      - type: bind
+        source: ${VIDEO_PROJECT_DIR:-.}
+        target: /project
