@@ -2,7 +2,7 @@
 
 FROM ghcr.io/astral-sh/uv:0.12.1 AS uv
 
-FROM node:24-bookworm-slim
+FROM node:25-bookworm-slim
 
 ARG TARGETARCH
 ARG HYPERFRAMES_VERSION=0.7.82
